@@ -13,11 +13,11 @@ This project provides a simple and reliable way to control Lutron Caseta lightin
 - Telnet integration enabled on your bridge (via the Lutron app)
 - Bridge must have a static IP address
 
-## Repository Structure
+## Project Structure
 
-- `src/` - Core library code
-- `examples/` - Example scripts and usage demonstrations
-- `docs/` - Documentation and reference materials
+- `src/` - Core library code that handles Lutron bridge communication
+- `lutron_control.py` - General CLI utility for controlling any light/zone
+- `bedroom_lights.py` - Specific utility for master bedroom lights
 
 ## Installation
 
@@ -27,52 +27,63 @@ This project provides a simple and reliable way to control Lutron Caseta lightin
    cd lutron-telnet
    ```
 
-2. No additional dependencies are required - the library uses only standard Python libraries.
+2. Make scripts executable:
+   ```
+   chmod +x lutron_control.py
+   chmod +x bedroom_lights.py
+   ```
 
-## Quick Start
+3. No additional dependencies are required - the library uses only standard Python libraries.
 
-```python
-from src.lutron_quick import LutronQuick
+## Usage - General Control
 
-# Create controller instance
-controller = LutronQuick("192.168.1.100")  # Replace with your bridge IP
+Control any zone with the general CLI utility:
 
-# Connect to the bridge
-if controller.connect():
-    # Turn on a light (zone ID 10) to 50% brightness
-    controller.set_light(10, 50.0)
-    
-    # Turn off the light
-    controller.set_light(10, 0.0)
-    
-    # Close the connection
-    controller.close()
+```bash
+# Turn on zone 5
+./lutron_control.py --ip 192.168.1.100 --zone 5 on
+
+# Turn off zone 5
+./lutron_control.py --ip 192.168.1.100 --zone 5 off
+
+# Set zone 5 to 75% brightness
+./lutron_control.py --ip 192.168.1.100 --zone 5 set --level 75
 ```
 
-## Example: Controlling Master Bedroom Lights
+## Usage - Bedroom Lights
 
-Run the included example script:
+Control master bedroom lights with the specific utility (zone 10 hardcoded):
 
+```bash
+# Turn on bedroom lights
+./bedroom_lights.py on
+
+# Turn off bedroom lights
+./bedroom_lights.py off
+
+# Set bedroom lights to 50% brightness
+./bedroom_lights.py half
+
+# Set bedroom lights to custom brightness
+./bedroom_lights.py set --level 35.5
 ```
-python examples/master_bedroom_lights.py
-```
 
-Be sure to edit the script to use your bridge's IP address.
+## Protocol Details
 
-## Zone IDs and Integration Report
+The Lutron Caseta integration protocol communicates via Telnet:
 
-The `docs/integration_report.json` file contains a complete listing of devices, zones, and areas as exported from a Lutron system. You can use this as a reference for the zone IDs for your own devices.
+- **Connection**: Telnet on port 23
+- **Authentication**: Username "lutron", password "integration"
+- **Commands**: 
+  - `#OUTPUT,{zone_id},1,{level}` - Set light level (0-100)
+  - `?DEVICE` - Query devices
+  - `?AREA` - Query areas
 
-To find your own zone IDs, you'll need to generate an integration report from your Lutron app.
+## Tips for Reliability
 
-## Documentation
-
-For detailed implementation information, see the [Lutron Integration Guide](docs/LUTRON_INTEGRATION_GUIDE.md), which includes:
-
-- Connection details and authentication
-- Command structure and response format
-- Implementation challenges and solutions
-- Best practices for reliable communication
+- Use short timeouts (3-5 seconds) to prevent hanging
+- Always use CR+LF line endings
+- Accumulate received data in a buffer to handle partial responses
 
 ## License
 
@@ -80,4 +91,4 @@ MIT
 
 ## Acknowledgments
 
-Based on experience with several Lutron integration libraries and documentation. 
+Based on practical experience with several Lutron integration libraries and documentation. 
