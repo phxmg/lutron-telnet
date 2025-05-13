@@ -1,101 +1,83 @@
-# Lutron Caseta Telnet Control
+# Lutron Telnet Controller
 
-A simple Python utility for controlling Lutron Caseta Smart Bridge Pro devices via the Telnet interface.
+A lightweight Python library for controlling Lutron Caseta Smart Bridge Pro devices via the Telnet integration protocol.
 
 ## Overview
 
-This project provides a simple way to control your Lutron Caseta lights and other devices from the command line using the Telnet integration protocol. It works with the Smart Bridge Pro 2 and uses your existing integration report for device discovery.
+This project provides a simple and reliable way to control Lutron Caseta lighting systems through the Telnet integration protocol available on Lutron Smart Bridge Pro and Ra2 Select devices. The implementation focuses on stability, proper timeout handling, and reliable communication.
 
 ## Requirements
 
-- Python 3.6 or later
-- Lutron Caseta Smart Bridge Pro (model L-BDGPRO2-WH)
-- Telnet integration enabled on your bridge
+- Python 3.6+
+- A Lutron Caseta Smart Bridge Pro (L-BDGPRO2-WH) or Ra2 Select Main Repeater
+- Telnet integration enabled on your bridge (via the Lutron app)
+- Bridge must have a static IP address
 
-## Getting Started
+## Repository Structure
 
-1. Make sure you have enabled the Telnet integration on your Smart Bridge Pro:
-   - Open the Lutron app on your mobile device
-   - Go to Settings → Advanced → Integration
-   - Enable Telnet Support
+- `src/` - Core library code
+- `examples/` - Example scripts and usage demonstrations
+- `docs/` - Documentation and reference materials
 
-2. Export your integration report from the Lutron app:
-   - In the app, go to Settings → Advanced → Integration
-   - Select "Email Integration Report"
-   - Save the integration report as `integration_report.json` in the same folder as the scripts
+## Installation
 
-3. Make the script executable:
-   ```bash
-   chmod +x lutron_simple.py
+1. Clone this repository:
+   ```
+   git clone https://github.com/phxmg/lutron-telnet.git
+   cd lutron-telnet
    ```
 
-## Usage
+2. No additional dependencies are required - the library uses only standard Python libraries.
 
-### Listing All Zones
+## Quick Start
 
-To list all available zones (controllable devices) organized by area:
+```python
+from src.lutron_quick import LutronQuick
 
-```bash
-python lutron_simple.py list --ip 192.168.49.91 --report integration_report.json
+# Create controller instance
+controller = LutronQuick("192.168.1.100")  # Replace with your bridge IP
+
+# Connect to the bridge
+if controller.connect():
+    # Turn on a light (zone ID 10) to 50% brightness
+    controller.set_light(10, 50.0)
+    
+    # Turn off the light
+    controller.set_light(10, 0.0)
+    
+    # Close the connection
+    controller.close()
 ```
 
-### Turning a Zone ON
+## Example: Controlling Master Bedroom Lights
 
-To turn on a specific zone (e.g., zone ID 5):
-
-```bash
-python lutron_simple.py on --ip 192.168.49.91 --zone 5 --report integration_report.json
-```
-
-### Turning a Zone OFF
-
-To turn off a specific zone:
-
-```bash
-python lutron_simple.py off --ip 192.168.49.91 --zone 5 --report integration_report.json
-```
-
-### Setting a Zone to a Specific Level
-
-To set a zone to a specific brightness level (0-100):
-
-```bash
-python lutron_simple.py set --ip 192.168.49.91 --zone 5 --level 50 --report integration_report.json
-```
-
-## Command Reference
+Run the included example script:
 
 ```
-usage: lutron_simple.py [-h] --ip IP [--zone ZONE] [--level LEVEL] [--report REPORT] {list,on,off,set}
-
-Control Lutron Caseta devices via Telnet
-
-positional arguments:
-  {list,on,off,set}     Command to execute
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --ip IP, -i IP        IP address of the Lutron bridge
-  --zone ZONE, -z ZONE  Zone ID to control
-  --level LEVEL, -l LEVEL
-                        Level to set (0-100)
-  --report REPORT, -r REPORT
-                        Path to integration report JSON file
+python examples/master_bedroom_lights.py
 ```
 
-## Zone IDs
+Be sure to edit the script to use your bridge's IP address.
 
-The zone IDs correspond to the controllable devices in your system. You can find these IDs:
-1. By using the `list` command
-2. In your integration report under the "Zones" section
-3. In the Lutron app's integration report
+## Zone IDs and Integration Report
 
-## Troubleshooting
+The `docs/integration_report.json` file contains a complete listing of devices, zones, and areas as exported from a Lutron system. You can use this as a reference for the zone IDs for your own devices.
 
-- If you get connection errors, ensure that Telnet integration is enabled in the Lutron app.
-- Verify you're using the correct IP address for your Smart Bridge Pro.
-- Make sure your integration report is up to date and properly formatted.
+To find your own zone IDs, you'll need to generate an integration report from your Lutron app.
+
+## Documentation
+
+For detailed implementation information, see the [Lutron Integration Guide](docs/LUTRON_INTEGRATION_GUIDE.md), which includes:
+
+- Connection details and authentication
+- Command structure and response format
+- Implementation challenges and solutions
+- Best practices for reliable communication
 
 ## License
 
-This project is open source. 
+MIT
+
+## Acknowledgments
+
+Based on experience with several Lutron integration libraries and documentation. 
