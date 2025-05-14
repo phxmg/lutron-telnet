@@ -23,6 +23,8 @@ def parse_args():
                         help=f'IP address of the Lutron bridge (default: {DEFAULT_BRIDGE_IP})')
     parser.add_argument('--mode', '-m', choices=['sequential', 'batch'], default='batch',
                         help='Control mode: sequential (one by one) or batch (all at once)')
+    parser.add_argument('--delay', '-d', type=float, default=0.5,
+                        help='Delay between commands in sequential mode (seconds, default: 0.5)')
     
     # Command subparsers
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
@@ -60,16 +62,16 @@ def set_light_thread(controller, zone_id, level):
     """Function for controlling a light in its own thread"""
     controller.set_light(zone_id, level)
 
-def set_all_lights_sequential(controller, level):
+def set_all_lights_sequential(controller, level, delay=0.5):
     """Set all lights one by one, waiting for each to complete"""
     level = max(0.0, min(100.0, level))
-    print(f"Setting all kitchen lights to {level}% (sequential mode)")
+    print(f"Setting all kitchen lights to {level}% (sequential mode, {delay}s delay)")
     
     # Control each zone sequentially
     for zone in KITCHEN_ZONES:
         print(f"  - Setting {zone['name']} (Zone {zone['id']}) to {level}%")
         controller.set_light(zone['id'], level)
-        time.sleep(0.5)  # Short delay between commands for stability
+        time.sleep(delay)  # Delay between commands
 
 def set_all_lights_batch(controller, level):
     """Set all lights simultaneously using threads"""
@@ -124,7 +126,7 @@ def main():
         
         # Use the appropriate control method based on mode
         if args.mode == 'sequential':
-            set_all_lights_sequential(controller, level)
+            set_all_lights_sequential(controller, level, args.delay)
         else:  # batch mode
             set_all_lights_batch(controller, level)
         
