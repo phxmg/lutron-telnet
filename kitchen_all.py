@@ -3,6 +3,7 @@ import argparse
 import json
 import sys
 import time
+import threading
 from src.lutron_quick import LutronQuick
 
 # Hardcoded bridge IP address
@@ -20,6 +21,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Control all Kitchen lights')
     parser.add_argument('--ip', '-i', default=DEFAULT_BRIDGE_IP, 
                         help=f'IP address of the Lutron bridge (default: {DEFAULT_BRIDGE_IP})')
+    parser.add_argument('--mode', '-m', choices=['sequential', 'batch'], default='batch',
+                        help='Control mode: sequential (one by one) or batch (all at once)')
     
     # Command subparsers
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
@@ -53,15 +56,45 @@ def list_kitchen_lights():
     
     print("")
 
-def set_all_lights(controller, level):
+def set_light_thread(controller, zone_id, level):
+    """Function for controlling a light in its own thread"""
+    controller.set_light(zone_id, level)
+
+def set_all_lights_sequential(controller, level):
+    """Set all lights one by one, waiting for each to complete"""
     level = max(0.0, min(100.0, level))
-    print(f"Setting all kitchen lights to {level}%")
+    print(f"Setting all kitchen lights to {level}% (sequential mode)")
     
     # Control each zone sequentially
     for zone in KITCHEN_ZONES:
         print(f"  - Setting {zone['name']} (Zone {zone['id']}) to {level}%")
         controller.set_light(zone['id'], level)
         time.sleep(0.5)  # Short delay between commands for stability
+
+def set_all_lights_batch(controller, level):
+    """Set all lights simultaneously using threads"""
+    level = max(0.0, min(100.0, level))
+    print(f"Setting all kitchen lights to {level}% (batch mode)")
+    
+    # Create a thread for each light
+    threads = []
+    for zone in KITCHEN_ZONES:
+        print(f"  - Queuing {zone['name']} (Zone {zone['id']})")
+        thread = threading.Thread(
+            target=set_light_thread,
+            args=(controller, zone['id'], level)
+        )
+        threads.append(thread)
+    
+    # Start all threads (sends commands in parallel)
+    for thread in threads:
+        thread.start()
+        # Small stagger to avoid flooding the bridge
+        time.sleep(0.1)
+    
+    # Wait for all threads to complete
+    for thread in threads:
+        thread.join()
 
 def main():
     args = parse_args()
@@ -79,14 +112,21 @@ def main():
         return 1
     
     try:
+        # Determine the brightness level based on command
         if args.command == 'on':
-            set_all_lights(controller, 100.0)
+            level = 100.0
         elif args.command == 'off':
-            set_all_lights(controller, 0.0)
+            level = 0.0
         elif args.command == 'half':
-            set_all_lights(controller, 50.0)
+            level = 50.0
         elif args.command == 'set':
-            set_all_lights(controller, args.level)
+            level = args.level
+        
+        # Use the appropriate control method based on mode
+        if args.mode == 'sequential':
+            set_all_lights_sequential(controller, level)
+        else:  # batch mode
+            set_all_lights_batch(controller, level)
         
         return 0
     except Exception as e:
