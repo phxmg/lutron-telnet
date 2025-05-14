@@ -15,11 +15,17 @@ This project provides a simple and reliable way to control Lutron Caseta lightin
 
 ## Project Structure
 
-- `src/` - Core library code that handles Lutron bridge communication
-- `lutron_control.py` - General CLI utility for controlling any light/zone
-- `bedroom_lights.py` - Specific utility for master bedroom lights (zone 10)
-- `kitchen_pendants.py` - Specific utility for kitchen island pendant lights (zone 30)
-- `list_zones.py` - Utility to list all zones from the integration report
+- **Core Library**
+  - `src/lutron_quick.py` - Base communication with the Lutron bridge
+  - `src/lutron_controller.py` - Advanced controller with batch and sequential operations
+  - `src/lutron_zones.py` - Zone definitions and utilities
+
+- **Control Scripts**
+  - `bedroom_lights.py` - Control master bedroom lights
+  - `kitchen_pendants.py` - Control kitchen island pendant lights
+  - `kitchen_all.py` - Control all kitchen lights together
+  - `lights.py` - General-purpose script for controlling multiple lights by zone ID
+  - `list_zones.py` - List available zones from the integration report
 
 ## Installation
 
@@ -31,73 +37,67 @@ This project provides a simple and reliable way to control Lutron Caseta lightin
 
 2. Make scripts executable:
    ```
-   chmod +x lutron_control.py bedroom_lights.py kitchen_pendants.py list_zones.py
+   chmod +x *.py
    ```
 
 3. No additional dependencies are required - the library uses only standard Python libraries.
 
-## Usage - General Control
+## Usage
 
-Control any zone with the general CLI utility:
-
-```bash
-# Turn on zone 5 (IP address is hardcoded, but can be overridden)
-./lutron_control.py --zone 5 on
-
-# Turn off zone 5 with custom IP
-./lutron_control.py --ip 192.168.1.100 --zone 5 off
-
-# Set zone 5 to 75% brightness
-./lutron_control.py --zone 5 set --level 75
-```
-
-## Usage - Bedroom Lights
-
-Control master bedroom lights with the dedicated utility (zone 10 hardcoded):
+### Controlling Specific Fixtures
 
 ```bash
-# Turn on bedroom lights
+# Master Bedroom Bay Window Lights
 ./bedroom_lights.py on
-
-# Turn off bedroom lights
 ./bedroom_lights.py off
-
-# Set bedroom lights to 50% brightness
 ./bedroom_lights.py half
-
-# Set bedroom lights to custom brightness
 ./bedroom_lights.py set --level 35.5
-```
 
-## Usage - Kitchen Pendant Lights
-
-Control kitchen island pendant lights with the dedicated utility (zone 30 hardcoded):
-
-```bash
-# Turn on kitchen pendant lights
+# Kitchen Island Pendants
 ./kitchen_pendants.py on
-
-# Turn off kitchen pendant lights
 ./kitchen_pendants.py off
-
-# Set kitchen pendant lights to 50% brightness
-./kitchen_pendants.py half
-
-# Set kitchen pendant lights to custom brightness
-./kitchen_pendants.py set --level 35.5
+./kitchen_pendants.py set --level 80
 ```
 
-## Zone Discovery
-
-List all zones in your system with the zone listing utility:
+### Controlling Multiple Lights Together
 
 ```bash
-# List all zones
+# All Kitchen Lights at once (batch mode)
+./kitchen_all.py on
+./kitchen_all.py off
+
+# All Kitchen Lights sequentially with 0.5s delay
+./kitchen_all.py --mode sequential --delay 0.5 on
+
+# Any combination of lights by zone ID (batch mode)
+./lights.py --zones 10 27 30 on
+
+# Any combination of lights sequentially
+./lights.py --zones 10 27 30 --mode sequential off
+```
+
+### Listing Zones
+
+```bash
+# List all zones from integration report
 ./list_zones.py --report integration_report.json
 
-# List only zones in the kitchen
+# List zones matching an area
 ./list_zones.py --report integration_report.json --area kitchen
 ```
+
+### Control Modes
+
+The system supports two control modes for multiple lights:
+
+1. **Batch Mode** (default): Controls all lights nearly simultaneously using multi-threading
+   - Ideal for turning all lights on/off at once
+   - Example: `./kitchen_all.py on`
+
+2. **Sequential Mode**: Controls lights one by one with configurable delay
+   - Specify with `--mode sequential`
+   - Set delay with `--delay X.X` (in seconds)
+   - Example: `./kitchen_all.py --mode sequential --delay 1.0 on`
 
 ## Protocol Details
 
