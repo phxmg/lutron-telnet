@@ -35,6 +35,9 @@ Examples:
   ./lutron_cli.py show kitchen-standard
   ./lutron_cli.py show kitchen-optimized
   
+  # Run the party mode
+  ./lutron_cli.py party
+  
   # Monitor bridge activity
   ./lutron_cli.py monitor
   
@@ -89,6 +92,15 @@ Examples:
     show_parser = subparsers.add_parser('show', help='Run a light show sequence')
     show_parser.add_argument('show_name', choices=['kitchen-standard', 'kitchen-optimized'],
                            help='Light show name to run')
+    
+    # PARTY command - run the randomized party lights
+    party_parser = subparsers.add_parser('party', help='Run the kitchen party lights (random patterns)')
+    party_parser.add_argument('--min-interval', type=float, default=0.2,
+                            help='Minimum interval between changes (default: 0.2 seconds)')
+    party_parser.add_argument('--max-interval', type=float, default=2.0,
+                            help='Maximum interval between changes (default: 2.0 seconds)')
+    party_parser.add_argument('--pattern-duration', type=float, default=10.0,
+                            help='How long to run each pattern (default: 10.0 seconds)')
     
     # MONITOR command - monitor bridge activity
     monitor_parser = subparsers.add_parser('monitor', help='Monitor Lutron bridge activity')
@@ -240,6 +252,29 @@ def run_show(args):
             controller.set_lights_batch(KITCHEN_ALL, 0.0)
             return 1
 
+def run_party(args):
+    """Run the kitchen party lights"""
+    from scripts.kitchen_party import run_party_lights
+    
+    # Create controller and run party
+    with LutronController(args.ip) as controller:
+        if not controller.connected:
+            print(f"Failed to connect to bridge at {args.ip}")
+            return 1
+        
+        try:
+            run_party_lights(
+                controller,
+                min_interval=args.min_interval,
+                max_interval=args.max_interval,
+                pattern_duration=args.pattern_duration
+            )
+            return 0
+        except KeyboardInterrupt:
+            print("\n\nParty interrupted! Turning lights off...")
+            controller.set_lights_batch(KITCHEN_ALL, 0.0)
+            return 1
+
 def main():
     """Main entry point for the unified CLI"""
     args = parse_args()
@@ -251,6 +286,8 @@ def main():
         return control_room(args)
     elif args.command == 'show':
         return run_show(args)
+    elif args.command == 'party':
+        return run_party(args)
     elif args.command == 'monitor':
         return monitor_bridge(args)
     elif args.command == 'list':
