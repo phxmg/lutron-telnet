@@ -1,0 +1,8 @@
+#!/bin/sh
+# Simple wrapper for lutron_cli.py
+
+# Get the directory where this script is located
+SCRIPT_DIR=$(dirname "$0")
+
+# Execute the Python script with all provided arguments
+exec "$SCRIPT_DIR/lutron_cli.py" "$@" 

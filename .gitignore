@@ -1,4 +1,28 @@
+# Python bytecode files
 __pycache__/
 *.py[cod]
 *$py.class
-.DS_Store 
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Local configuration
+config.ini
+*.log 

@@ -11,79 +11,70 @@ This project provides a simple and reliable way to control Lutron Caseta lightin
 - Python 3.6+
 - A Lutron Caseta Smart Bridge Pro (L-BDGPRO2-WH) or Ra2 Select Main Repeater
 - Telnet integration enabled on your bridge (via the Lutron app)
-- Bridge must have a static IP address (default: 192.168.49.91)
+- Bridge must have a static IP address (configured in src/lutron_zones.py)
 
 ## Project Structure
 
 - **Core Library**
-  - `src/lutron_quick.py` - Base communication with the Lutron bridge
   - `src/lutron_controller.py` - Advanced controller with batch and sequential operations
+  - `src/lutron_quick.py` - Base communication with the Lutron bridge
   - `src/lutron_zones.py` - Zone definitions and utilities
 
-- **Control Scripts**
-  - `bedroom_lights.py` - Control master bedroom lights
-  - `kitchen_pendants.py` - Control kitchen island pendant lights
-  - `kitchen_all.py` - Control all kitchen lights together
-  - `lights.py` - General-purpose script for controlling multiple lights by zone ID
-  - `list_zones.py` - List available zones from the integration report
+- **Main Command Line Interface**
+  - `lutron_cli.py` - Unified CLI for all Lutron operations
+
+- **Scripts**
+  - `scripts/bedroom_lights.py` - Control master bedroom lights
+  - `scripts/kitchen_pendants.py` - Control kitchen island pendant lights
+  - `scripts/kitchen_all.py` - Control all kitchen lights together
+  - `scripts/kitchen_show.py` - Standard light show for kitchen
+  - `scripts/kitchen_show_optimized.py` - Optimized light show for kitchen
+  - `scripts/lutron_monitor.py` - Monitor real-time bridge activity
+  - `scripts/list_zones.py` - List available zones from the integration report
+
+- **Documentation**
+  - `docs/LUTRON_GUIDE.md` - Detailed protocol information
 
 ## Installation
 
 1. Clone this repository:
    ```
-   git clone https://github.com/phxmg/lutron-telnet.git
+   git clone https://github.com/yourusername/lutron-telnet.git
    cd lutron-telnet
    ```
 
-2. Make scripts executable:
+2. Make the main CLI script executable:
    ```
-   chmod +x *.py
+   chmod +x lutron_cli.py
    ```
 
 3. No additional dependencies are required - the library uses only standard Python libraries.
 
 ## Usage
 
-### Controlling Specific Fixtures
+### Using the Unified CLI
+
+The preferred way to control your Lutron system is through the unified CLI:
 
 ```bash
-# Master Bedroom Bay Window Lights
-./bedroom_lights.py on
-./bedroom_lights.py off
-./bedroom_lights.py half
-./bedroom_lights.py set --level 35.5
+# Control a specific zone
+./lutron_cli.py zone --zone-id 10 on
+./lutron_cli.py zone --zone-id 30 off
+./lutron_cli.py zone --zone-id 27 set --level 50
 
-# Kitchen Island Pendants
-./kitchen_pendants.py on
-./kitchen_pendants.py off
-./kitchen_pendants.py set --level 80
-```
+# Control a room
+./lutron_cli.py room kitchen on
+./lutron_cli.py room bedroom off
 
-### Controlling Multiple Lights Together
+# Run a light show
+./lutron_cli.py show kitchen-standard
+./lutron_cli.py show kitchen-optimized
 
-```bash
-# All Kitchen Lights at once (batch mode)
-./kitchen_all.py on
-./kitchen_all.py off
+# Monitor bridge activity
+./lutron_cli.py monitor
 
-# All Kitchen Lights sequentially with 0.5s delay
-./kitchen_all.py --mode sequential --delay 0.5 on
-
-# Any combination of lights by zone ID (batch mode)
-./lights.py --zones 10 27 30 on
-
-# Any combination of lights sequentially
-./lights.py --zones 10 27 30 --mode sequential off
-```
-
-### Listing Zones
-
-```bash
-# List all zones from integration report
-./list_zones.py --report integration_report.json
-
-# List zones matching an area
-./list_zones.py --report integration_report.json --area kitchen
+# List zones
+./lutron_cli.py list
 ```
 
 ### Control Modes
@@ -92,12 +83,12 @@ The system supports two control modes for multiple lights:
 
 1. **Batch Mode** (default): Controls all lights nearly simultaneously using multi-threading
    - Ideal for turning all lights on/off at once
-   - Example: `./kitchen_all.py on`
+   - Example: `./lutron_cli.py room kitchen on`
 
 2. **Sequential Mode**: Controls lights one by one with configurable delay
    - Specify with `--mode sequential`
    - Set delay with `--delay X.X` (in seconds)
-   - Example: `./kitchen_all.py --mode sequential --delay 1.0 on`
+   - Example: `./lutron_cli.py room kitchen --mode sequential --delay 1.0 on`
 
 ## Protocol Details
 
@@ -112,9 +103,13 @@ The Lutron Caseta integration protocol communicates via Telnet:
 
 ## Tips for Reliability
 
-- Use short timeouts (3-5 seconds) to prevent hanging
-- Always use CR+LF line endings
-- Accumulate received data in a buffer to handle partial responses
+- The library includes proper timeouts to prevent hanging
+- Adds necessary delays between commands to prevent overwhelming the bridge
+- Properly handles partial responses with buffering
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 

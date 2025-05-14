@@ -6,6 +6,7 @@ Lutron Controller - High-level control functions for Lutron lights
 import threading
 import time
 from src.lutron_quick import LutronQuick
+from src.lutron_zones import Zone
 
 class LutronController:
     """Advanced controller with batch and sequential operations for Lutron lights"""
@@ -31,10 +32,18 @@ class LutronController:
         if not self.connected:
             raise RuntimeError("Not connected to bridge")
             
+        # If zone_id is a Zone object, extract just the ID
+        if isinstance(zone_id, Zone):
+            zone_id = zone_id.id
+            
         return self.quick.set_light(zone_id, level)
     
     def _set_light_thread(self, zone_id, level):
         """Helper function for threading - controls a single light"""
+        # If zone_id is a Zone object, extract just the ID
+        if isinstance(zone_id, Zone):
+            zone_id = zone_id.id
+            
         self.quick.set_light(zone_id, level)
     
     def set_lights_sequential(self, zones, level, delay=0.5, verbose=True):
@@ -45,6 +54,7 @@ class LutronController:
             zones: List of zones. Each zone can be either:
                 - An integer (zone_id)
                 - A dict with 'id' and 'name' keys
+                - A Zone object
             level: Brightness level (0-100)
             delay: Delay between commands in seconds
             verbose: Whether to print status messages
@@ -59,8 +69,13 @@ class LutronController:
         
         # Process each zone
         for zone in zones:
-            # Handle both integer zone_ids and dict with id/name
-            if isinstance(zone, dict):
+            # Extract zone_id and zone_name based on type
+            if isinstance(zone, Zone):
+                zone_id = zone.id
+                zone_name = zone.name
+                if verbose:
+                    print(f"  - Setting {zone_name} (Zone {zone_id}) to {level}%")
+            elif isinstance(zone, dict):
                 zone_id = zone['id']
                 zone_name = zone.get('name', f"Zone {zone_id}")
                 if verbose:
@@ -84,6 +99,7 @@ class LutronController:
             zones: List of zones. Each zone can be either:
                 - An integer (zone_id)
                 - A dict with 'id' and 'name' keys
+                - A Zone object
             level: Brightness level (0-100)
             verbose: Whether to print status messages
         """
@@ -99,8 +115,13 @@ class LutronController:
         threads = []
         
         for zone in zones:
-            # Handle both integer zone_ids and dict with id/name
-            if isinstance(zone, dict):
+            # Extract zone_id and zone_name based on type
+            if isinstance(zone, Zone):
+                zone_id = zone.id
+                zone_name = zone.name
+                if verbose:
+                    print(f"  - Queuing {zone_name} (Zone {zone_id})")
+            elif isinstance(zone, dict):
                 zone_id = zone['id']
                 zone_name = zone.get('name', f"Zone {zone_id}")
                 if verbose:
