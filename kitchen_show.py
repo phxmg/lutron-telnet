@@ -28,12 +28,14 @@ def run_light_show(controller):
     
     # Part 2: Turn each light on to 50% sequentially with 2s delay
     print("\n🌓 Turning each light ON to 50% sequentially")
-    controller.set_lights_sequential(KITCHEN_ALL, 50.0, delay=2.0)
+    controller.set_lights_sequential(KITCHEN_ALL, 25.0, delay=1.0)
     time.sleep(2)  # Short pause between sequences
     
     # Part 3: Increase each light to 100% sequentially with 2s delay
     print("\n🌕 Increasing each light to 100% sequentially")
-    controller.set_lights_sequential(KITCHEN_ALL, 100.0, delay=2.0)
+    controller.set_lights_sequential(KITCHEN_ALL, 50.0, delay=1.0)
+    controller.set_lights_sequential(KITCHEN_ALL, 75.0, delay=1.0)
+    controller.set_lights_sequential(KITCHEN_ALL, 100.0, delay=1.0)
     
     # Part 4: Wait 10 seconds with all lights at full brightness
     print("\n⏱️  All lights at full brightness for 10 seconds")
@@ -69,7 +71,8 @@ def run_light_show(controller):
                 # Set the light to the new level
                 controller.set_light(zone_id, new_level)
                 
-                # No delay between lights for rapid cascade effect
+                # Add a small delay between lights to avoid overwhelming the bridge
+                time.sleep(0.05)  # 50ms delay between controlling different lights
         
         # Tiny delay between iterations to make the effect visible
         time.sleep(0.1)
