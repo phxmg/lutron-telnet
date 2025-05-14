@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
+"""
+Bedroom Lights - Control master bedroom bay window lights
+"""
 import argparse
 import sys
-from src.lutron_quick import LutronQuick
-
-# Hardcoded zone ID for Master Bedroom Bay Window Light
-BEDROOM_LIGHT_ZONE = 10
+from src.lutron_controller import LutronController
+from src.lutron_zones import MASTER_BEDROOM
 
 # Hardcoded bridge IP address
 DEFAULT_BRIDGE_IP = "192.168.49.91"
@@ -37,34 +38,34 @@ def parse_args():
 def main():
     args = parse_args()
     
-    # Create controller instance
-    controller = LutronQuick(args.ip)
-    
-    if not controller.connect():
-        print("Failed to connect to the bridge")
-        return 1
-    
-    try:
+    # Create controller and connect
+    with LutronController(args.ip) as controller:
+        if not controller.connected:
+            print("Failed to connect to the bridge")
+            return 1
+        
+        # Get the bay window light info
+        bay_window = MASTER_BEDROOM["BAY_WINDOW"]
+        zone_id = bay_window["id"]
+        name = bay_window["name"]
+        
+        # Determine the brightness level based on command
         if args.command == 'on':
-            print("Turning bedroom lights ON")
-            controller.set_light(BEDROOM_LIGHT_ZONE, 100.0)
+            print(f"Turning {name} ON")
+            level = 100.0
         elif args.command == 'off':
-            print("Turning bedroom lights OFF")
-            controller.set_light(BEDROOM_LIGHT_ZONE, 0.0)
+            print(f"Turning {name} OFF")
+            level = 0.0
         elif args.command == 'half':
-            print("Setting bedroom lights to 50%")
-            controller.set_light(BEDROOM_LIGHT_ZONE, 50.0)
+            print(f"Setting {name} to 50%")
+            level = 50.0
         elif args.command == 'set':
             level = max(0.0, min(100.0, args.level))
-            print(f"Setting bedroom lights to {level}%")
-            controller.set_light(BEDROOM_LIGHT_ZONE, level)
+            print(f"Setting {name} to {level}%")
         
+        # Control the light
+        controller.set_light(zone_id, level)
         return 0
-    except Exception as e:
-        print(f"Error: {e}")
-        return 1
-    finally:
-        controller.close()
 
 if __name__ == "__main__":
     sys.exit(main()) 
