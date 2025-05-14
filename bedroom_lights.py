@@ -6,8 +6,8 @@ from src.lutron_quick import LutronQuick
 # Hardcoded zone ID for Master Bedroom Bay Window Light
 BEDROOM_LIGHT_ZONE = 10
 
-# Replace with your bridge IP address
-DEFAULT_BRIDGE_IP = "192.168.1.100"
+# Hardcoded bridge IP address
+DEFAULT_BRIDGE_IP = "192.168.49.91"
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Control Master Bedroom Lights')

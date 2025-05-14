@@ -3,27 +3,32 @@ import argparse
 import sys
 from src.lutron_quick import LutronQuick
 
+# Hardcoded zone ID for Kitchen Island Pendants
+PENDANT_LIGHT_ZONE = 30
+
 # Hardcoded bridge IP address
 DEFAULT_BRIDGE_IP = "192.168.49.91"
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Control Lutron Caseta devices via Telnet')
+    parser = argparse.ArgumentParser(description='Control Kitchen Island Pendant Lights')
     parser.add_argument('--ip', '-i', default=DEFAULT_BRIDGE_IP, 
-                       help=f'IP address of the Lutron bridge (default: {DEFAULT_BRIDGE_IP})')
-    parser.add_argument('--zone', '-z', type=int, required=True, help='Zone ID to control')
+                        help=f'IP address of the Lutron bridge (default: {DEFAULT_BRIDGE_IP})')
     
     # Command subparsers
     subparsers = parser.add_subparsers(dest='command', help='Command to execute')
     subparsers.required = True
     
     # ON command
-    subparsers.add_parser('on', help='Turn zone ON')
+    subparsers.add_parser('on', help='Turn pendant lights ON')
     
     # OFF command
-    subparsers.add_parser('off', help='Turn zone OFF')
+    subparsers.add_parser('off', help='Turn pendant lights OFF')
+    
+    # Set to 50% command
+    subparsers.add_parser('half', help='Set pendant lights to 50% brightness')
     
     # SET command
-    set_parser = subparsers.add_parser('set', help='Set zone to specific level')
+    set_parser = subparsers.add_parser('set', help='Set pendant lights to specific level')
     set_parser.add_argument('--level', '-l', type=float, required=True, 
                          help='Brightness level (0.0-100.0)')
     
@@ -41,15 +46,18 @@ def main():
     
     try:
         if args.command == 'on':
-            print(f"Turning zone {args.zone} ON")
-            controller.set_light(args.zone, 100.0)
+            print("Turning kitchen pendant lights ON")
+            controller.set_light(PENDANT_LIGHT_ZONE, 100.0)
         elif args.command == 'off':
-            print(f"Turning zone {args.zone} OFF")
-            controller.set_light(args.zone, 0.0)
+            print("Turning kitchen pendant lights OFF")
+            controller.set_light(PENDANT_LIGHT_ZONE, 0.0)
+        elif args.command == 'half':
+            print("Setting kitchen pendant lights to 50%")
+            controller.set_light(PENDANT_LIGHT_ZONE, 50.0)
         elif args.command == 'set':
             level = max(0.0, min(100.0, args.level))
-            print(f"Setting zone {args.zone} to {level}%")
-            controller.set_light(args.zone, level)
+            print(f"Setting kitchen pendant lights to {level}%")
+            controller.set_light(PENDANT_LIGHT_ZONE, level)
         
         return 0
     except Exception as e:

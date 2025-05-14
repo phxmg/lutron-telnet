@@ -3,9 +3,15 @@ import argparse
 import json
 import sys
 
+# Hardcoded bridge IP address
+DEFAULT_BRIDGE_IP = "192.168.49.91"
+
 def parse_args():
     parser = argparse.ArgumentParser(description='List zones from Lutron integration report')
     parser.add_argument('--report', '-r', required=True, help='Path to integration report JSON file')
+    parser.add_argument('--area', '-a', help='Filter zones by area name (case-insensitive)')
+    parser.add_argument('--ip', '-i', default=DEFAULT_BRIDGE_IP,
+                        help=f'IP address of the Lutron bridge (default: {DEFAULT_BRIDGE_IP})')
     return parser.parse_args()
 
 def main():
@@ -16,27 +22,40 @@ def main():
         with open(args.report, 'r') as f:
             report = json.load(f)
         
-        # Extract areas and zones
-        areas = {area['href']: area['Name'] for area in report.get('Areas', [])}
-        zones = report.get('Zones', [])
+        # Extract zones
+        zones = report.get('LIPIdList', {}).get('Zones', [])
         
         # Organize zones by areas
         zones_by_area = {}
         
         for zone in zones:
-            area_href = zone.get('Area', {}).get('href')
-            if area_href:
-                area_name = areas.get(area_href, 'Unknown Area')
-                if area_name not in zones_by_area:
-                    zones_by_area[area_name] = []
-                
-                zones_by_area[area_name].append({
-                    'id': zone.get('ID', 'Unknown'),
-                    'name': zone.get('Name', 'Unknown'),
-                })
+            area_name = zone.get('Area', {}).get('Name', 'Unknown Area')
+            if area_name not in zones_by_area:
+                zones_by_area[area_name] = []
+            
+            zones_by_area[area_name].append({
+                'id': zone.get('ID', 'Unknown'),
+                'name': zone.get('Name', 'Unknown'),
+            })
+        
+        # Filter by area if specified
+        if args.area:
+            filtered_areas = {}
+            for area_name, zone_list in zones_by_area.items():
+                if args.area.lower() in area_name.lower():
+                    filtered_areas[area_name] = zone_list
+            zones_by_area = filtered_areas
         
         # Print zones by area
+        if not zones_by_area:
+            if args.area:
+                print(f"No zones found for area matching '{args.area}'")
+            else:
+                print("No zones found in the integration report")
+            return 1
+        
         print("\nLutron Caseta Zones by Area:\n")
+        print(f"Bridge IP: {args.ip}\n")
         
         for area_name, zone_list in sorted(zones_by_area.items()):
             print(f"Area: {area_name}")
